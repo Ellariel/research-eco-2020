@@ -1,0 +1,1088 @@
+---
+title: "Экологические установки и ситуативные стимулы в условиях трансформирующейся
+  экологической культуры России: эмпирическое исследование"
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
+---
+# Введение
+
+Оцениваются 4 поведенческих блока:
+
+- Переработка (Recycling Behavior, RB), 
+- Эко-покупки (Eco-Shopping Behavior, ESB), 
+- Ресурсосбережение (Resource-Saving Behavior, RSB),
+- Эко-мобильность (Eco-Mobility Behavior, EMB).
+
+
+По каждому из блоков считается аддитивный индекс, представляющий собой оценку склонности респондента к определённому виду эко-поведения. Дополнительно считается индекс склонности к комфорту против склонности к экономии (tendency to be comfortable, TC). 
+
+## Гипотезы
+
+*Гипотеза H1.* Эко-поведение не однородно - склонность к одному из видов эко-поведения не предопределяет склонность к другому.
+
+
+*Гипотеза H2.* Люди обычно переоценивают собственную склонность к эко-поведению и недооценивают склонность окружающих.
+
+
+*Гипотеза H3.* Склонность к тому или иному виду эко-поведения ситуативно подвержена влиянию стимулов, как эмоционального, так и рационального характера.
+
+
+*Гипотеза H3а.* Склонность к более затратным видам поведения менее подвержена ситуативному влиянию стимулов (low-cost hypothesis).
+
+## Подготовка данных
+
+Ниже представленны параметры окружения R. Производится загрузка данных, логарифмирование некоторых признаков (возраст, размер города, время ответа). Вычисляются аддитивные индексы, затем производится их унификация в диапазоне [0...1] для удобства графического отображения и интерпретации.
+
+```{r, warning=FALSE, message=FALSE}
+library(knitr)
+library(MatchIt)
+library(dplyr)
+library(ggplot2)
+library(ggthemes)
+library(gplots)
+library(gtable)
+library(egg)
+library(corrplot)
+library(scales)
+```
+
+
+```{r, cache=TRUE}
+#environment info
+sessionInfo()
+
+#loading raw data
+data<-read.csv("ecodata.csv", sep=";", dec=",")
+
+data<-data[!is.na(data$age),]
+data<-data[!is.na(data$income),]
+
+data$group<-factor(data$group, labels = c("Control","Rational","Emotional"))
+
+#log data
+data$log_age <- log10(data$age)
+data$log_city_size <- log10(data$city_size)
+data$log_time_RB <- log10(data$time_12)
+data$log_time_ESB <- log10(data$time_34)
+data$log_time_RSB <- log10(data$time_56)
+data$log_time_EMB <- log10(data$time_78)
+data$log_time_TC <- log10(data$time_9)
+
+#make an additive indexes
+data$RB  <- (data$case_1_1 + data$case_1_2 + data$case_2_1 + data$case_2_2) #1..24
+data$ESB <- (data$case_3_1 + data$case_3_2 + data$case_4_1 + data$case_4_2) #1..24
+data$RSB <- (data$case_5_1 + data$case_5_2 + data$case_6_1 + data$case_6_2) #1..24
+data$EMB <- (data$case_7_1 + data$case_7_2 + data$case_8_1 + data$case_8_2) #1..24
+
+data<-data[!is.na(data$ESB),]
+
+data$TC  <- (data$case_9_1 + data$case_9_2) #1..12
+
+data$RBo  <- (data$case_1_3 + data$case_2_3) #1..12
+data$ESBo <- (data$case_3_3 + data$case_4_3) #1..12
+data$RSBo <- (data$case_5_3 + data$case_6_3) #1..12
+data$EMBo <- (data$case_7_3 + data$case_8_3) #1..12
+
+
+#rescale <- function(x){(x-min(x))/(max(x)-min(x))}
+
+data$RB  <- rescale(data$RB)
+data$ESB <- rescale(data$ESB)
+data$RSB <- rescale(data$RSB)
+data$EMB <- rescale(data$EMB)
+data$TC  <- rescale(data$TC)
+data$RBo  <- rescale(data$RBo)
+data$ESBo <- rescale(data$ESBo)
+data$RSBo <- rescale(data$RSBo)
+data$EMBo <- rescale(data$EMBo)
+  
+```
+
+
+## Сводные статистики и описание данных
+
+```{r, cache=TRUE}
+summary(data[,c(29,30,32:37,39, 54:62)])
+
+par(mfrow = c(3,4), mar=c(2,1,1,1))
+hist(data$RB, breaks = "FD", main = "RB")
+hist(data$ESB, breaks = "FD", main = "ESB")
+hist(data$RSB, breaks = "FD", main = "RSB")
+hist(data$EMB, breaks = "FD", main = "EMB")
+hist(data$TC, breaks = "FD", main = "TC")
+hist(data$RBo, breaks = "FD", main = "RBo")
+hist(data$ESBo, breaks = "FD", main = "ESBo")
+hist(data$RSBo, breaks = "FD", main = "RSBo")
+hist(data$EMBo, breaks = "FD", main = "EMBo")
+
+hist(data$log_age, breaks = "FD", main = "log_age")
+hist(data$log_city_size, breaks = "FD", main = "log_city_size")
+hist(data$income, breaks = "FD", main = "income")
+
+```
+
+
+## Анализ различий между несбалансированными группами
+
+
+```{r, cache=TRUE}
+par(mfrow = c(2,2), mar=c(2,2,2,1))
+boxplot(RB ~ group, data=data, main="RB", horizontal = T)
+boxplot(ESB ~ group, data=data, main="ESB", horizontal = T)
+boxplot(RSB ~ group, data=data, main="RSB", horizontal = T)
+boxplot(EMB ~ group, data=data, main="EMB", horizontal = T)
+
+boxplot(RBo ~ group, data=data, main="RBo", horizontal = T)
+boxplot(ESBo ~ group, data=data, main="ESBo", horizontal = T)
+boxplot(RSBo ~ group, data=data, main="RSBo", horizontal = T)
+boxplot(EMBo ~ group, data=data, main="EMBo", horizontal = T)
+boxplot(RBo ~ group, data=data, main="RBo", horizontal = T)
+
+boxplot(log_age ~ group, data=data, main="log age", horizontal = T)
+boxplot(log_city_size ~ group, data=data, main="log city size", horizontal = T)
+boxplot(income ~ group, data=data, main="income", horizontal = T)
+boxplot(TC ~ group, data=data, main="TC", horizontal = T)
+
+```
+
+```{r}
+summary(data[data$group=="Control",c(29,30,32:37,39, 54:62)])
+head(data[data$group=="Control",c(29,30,32:37,39, 54:62)])
+nrow(data[data$group=="Control",c(29,30,32:37,39, 54:62)])
+```
+
+```{r}
+summary(data[data$group=="Emotional",c(29,30,32:37,39, 54:62)])
+head(data[data$group=="Emotional",c(29,30,32:37,39, 54:62)])
+nrow(data[data$group=="Emotional",c(29,30,32:37,39, 54:62)])
+```
+
+
+```{r}
+summary(data[data$group=="Rational",c(29,30,32:37,39, 54:62)])
+head(data[data$group=="Rational",c(29,30,32:37,39, 54:62)])
+nrow(data[data$group=="Rational",c(29,30,32:37,39, 54:62)])
+```
+
+```{r, warning=FALSE, message=FALSE}
+library(psych)
+describeBy(data[,c(32:37,39,54:62)], data$group, na.rm = T)$Control[,c(2:5,8,9)]
+describeBy(data[,c(32:37,39,54:62)], data$group, na.rm = T)$Rational[,c(2:5,8,9)]
+describeBy(data[,c(32:37,39,54:62)], data$group, na.rm = T)$Emotional[,c(2:5,8,9)]
+```
+
+## Балансирование групп
+
+Балансирование групп производится на основе метода PSM по основным характеристикам респондентов (пол, доход, занятость, возраст, размер города, склонность к комфорту).
+
+
+Ниже представлены результаты балансировки и основные характеристики сбалансированных групп.
+
+
+## Emotional vs Control
+
+
+```{r, cache=TRUE}
+emo_data <- data %>%  # MatchIt does not allow missing values
+  select(id, emo, sex, income, isworking, log_age, log_city_size, TC) %>%
+    na.omit()
+  
+match.emo <- matchit(emo ~ sex + income + isworking + log_age + log_city_size + TC, data = emo_data, method="nearest")
+
+a <- summary(match.emo)
+
+emo_data <- match.data(match.emo) %>% 
+  select(id, distance, weights) %>% 
+    left_join(data, by = c("id"))
+
+plot(match.emo, type = 'jitter', interactive = F)
+
+kable(a$nn, digits = 2, align = 'c', caption = 'Table: Sample sizes')
+
+t <- c("sex","income","isworking","log_age","log_city_size","TC")
+t <- lapply(t, function(v) {
+  #t.test(emo_data[, v] ~ emo_data[, "rat"])
+  w<-wilcox.test(emo_data[, v] ~ emo_data[, "emo"], paired = F, alternative = "two.sided")
+  w$p.value
+})
+t<-unlist(t)
+
+#Wilcoxon rank sum test with continuity correction
+#W = 4459, p-value = 0.2775
+#alternative hypothesis: true location shift is not equal to 0
+
+a <- cbind(a$sum.matched[-1,c(1,2,4)], t)
+names(a)[4]<-"p-value"
+
+
+kable(a, digits = 3, align = 'c', 
+      caption = 'Table: Summary of balance for matched data')
+```
+
+
+
+```{r, cache=TRUE}
+by<-factor(emo_data$emo, labels = c("Control","Emotional"))
+
+par(mfrow = c(1,4), mar=c(2,2,2,1))
+boxplot(RB ~ by, data=emo_data, main="RB", horizontal = F)
+boxplot(ESB ~ by, data=emo_data, main="ESB", horizontal = F)
+boxplot(RSB ~ by, data=emo_data, main="RSB", horizontal = F)
+boxplot(EMB ~ by, data=emo_data, main="EMB", horizontal = F)
+
+boxplot(RBo ~ by, data=emo_data, main="RBo", horizontal = F)
+boxplot(ESBo ~ by, data=emo_data, main="ESBo", horizontal = F)
+boxplot(RSBo ~ by, data=emo_data, main="RSBo", horizontal = F)
+boxplot(EMBo ~ by, data=emo_data, main="EMBo", horizontal = F)
+boxplot(RBo ~ by, data=emo_data, main="RBo", horizontal = F)
+
+boxplot(log_age ~ by, data=emo_data, main="log age", horizontal = F)
+boxplot(log_city_size ~ by, data=emo_data, main="log city size", horizontal = F)
+boxplot(income ~ by, data=emo_data, main="income", horizontal = F)
+boxplot(TC ~ by, data=emo_data, main="TC", horizontal = F)
+```
+
+```{r}
+summary(emo_data[emo_data$emo==1,c(34:37,41)])
+summary(emo_data[emo_data$emo==0,c(34:37,41)])
+```
+
+
+Анализ значимости различий в средних между независимыми группами (u-тест Манна-Уитни).
+p-value > 0.05 означает отсутствие значимых различий.
+
+
+```{r, eval=FALSE, include=FALSE}
+## Difference test
+t <- c("sex","income","isworking","log_age","log_city_size","TC")
+lapply(t, function(v) {
+  #t.test(emo_data[, v] ~ emo_data[, "emo"]) #(t-тест Уэлша)
+  wilcox.test(emo_data[, v] ~ emo_data[, "emo"], paired = F, alternative = "two.sided") #(u-тест Манна-Уитни)
+})
+```
+
+
+## Rational vs Control
+
+
+```{r, cache=TRUE}
+rat_data <- data %>%  # MatchIt does not allow missing values
+  select(id, rat, sex, income, isworking, log_age, log_city_size, TC) %>%
+    na.omit()
+  
+match.rat <- matchit(rat ~ sex + income + isworking + log_age + log_city_size + TC, data = rat_data, method="nearest")
+
+a <- summary(match.rat)
+
+rat_data <- match.data(match.rat) %>% 
+  select(id, distance, weights) %>% 
+    left_join(data, by = c("id"))
+
+plot(match.rat, type = 'jitter', interactive = F)
+
+kable(a$nn, digits = 2, align = 'c', caption = 'Table: Sample sizes')
+
+
+t <- c("sex","income","isworking","log_age","log_city_size","TC")
+t <- lapply(t, function(v) {
+  #t.test(rat_data[, v] ~ rat_data[, "rat"])
+  w<-wilcox.test(rat_data[, v] ~ rat_data[, "rat"], paired = F, alternative = "two.sided")
+  w$p.value
+})
+t<-unlist(t)
+
+#Wilcoxon rank sum test with continuity correction
+#W = 4459, p-value = 0.2775
+#alternative hypothesis: true location shift is not equal to 0
+
+a <- cbind(a$sum.matched[-1,c(1,2,4)], t)
+names(a)[4]<-"p-value"
+
+kable(a, digits = 3, align = 'c', 
+      caption = 'Table: Summary of balance for matched data')
+```
+
+
+
+```{r, cache=TRUE}
+by<-factor(rat_data$rat, labels = c("Control","Rational"))
+
+par(mfrow = c(1,4), mar=c(2,2,2,1))
+boxplot(RB ~ by, data=rat_data, main="RB", horizontal = F)
+boxplot(ESB ~ by, data=rat_data, main="ESB", horizontal = F)
+boxplot(RSB ~ by, data=rat_data, main="RSB", horizontal = F)
+boxplot(EMB ~ by, data=rat_data, main="EMB", horizontal = F)
+
+boxplot(RBo ~ by, data=rat_data, main="RBo", horizontal = F)
+boxplot(ESBo ~ by, data=rat_data, main="ESBo", horizontal = F)
+boxplot(RSBo ~ by, data=rat_data, main="RSBo", horizontal = F)
+boxplot(EMBo ~ by, data=rat_data, main="EMBo", horizontal = F)
+boxplot(RBo ~ by, data=rat_data, main="RBo", horizontal = F)
+
+boxplot(log_age ~ by, data=rat_data, main="log age", horizontal = F)
+boxplot(log_city_size ~ by, data=rat_data, main="log city size", horizontal = F)
+boxplot(income ~ by, data=rat_data, main="income", horizontal = F)
+boxplot(TC ~ by, data=rat_data, main="TC", horizontal = F)
+
+```
+
+
+```{r}
+summary(rat_data[rat_data$rat==1,c(34:37,41)])
+summary(rat_data[rat_data$rat==0,c(34:37,41)])
+
+```
+
+
+Анализ значимости различий в средних между независимыми группами (u-тест Манна-Уитни).
+p-value > 0.05 означает отсутствие значимых различий.
+
+```{r, eval=TRUE, include=FALSE}
+dopdf <- function(filename = "dopdf.pdf", pdf.width = 7, pdf.height = 5) {
+dev.copy2pdf(file=filename, width = pdf.width, height = pdf.height)
+}
+```
+
+```{r, eval=FALSE, include=FALSE}
+## Difference test
+t <- c("sex","income","isworking","log_age","log_city_size","TC")
+lapply(t, function(v) {
+  #t.test(rat_data[, v] ~ rat_data[, "rat"])
+  w<-wilcox.test(rat_data[, v] ~ rat_data[, "rat"], paired = F, alternative = "two.sided")
+  w
+})
+
+```
+# Результаты
+
+
+## Проверка гипотезы №1
+
+
+*Гипотеза H1. Эко-поведение не однородно - склонность к одному из видов эко-поведения не предопределяет склонность к другому.*
+
+
+Для исследования этой гипотезы прибегнем к методу Smallest Space Analyse (SSA). В рамках данного метода в едином пространстве размещаются признаки объекта на основе некоторой метрики близости. Относительно близкие друг к другу признаки считаются однородными. Для построения пространства будем использовать метрику d=1-r, где r - коэффициент корреляции Спирмена. Двумерная диаграмма рассеяния (рис.) на основе d показывает, что чем более скоррелированы индексы склонности к некоторым видам эко-поведения, тем ближе их метки на диаграмме и, соответственно, данные виды поведения относительно более однородны.
+
+
+```{r, warning=FALSE, message=FALSE, cache=FALSE}
+#cmdscale(d, k = 2, eig = FALSE, add = FALSE, x.ret = FALSE) #Multidimensional Scaling
+
+cols <- 56:59
+
+ctrl_emo <- cbind(
+  na.omit(emo_data[emo_data$emo==0,cols]), #na.omit
+  na.omit(emo_data[emo_data$emo==1,cols])
+)
+
+names(ctrl_emo)[1:4] <- sapply(names(ctrl_emo)[1:4],function(x) paste0(x,"c"))
+names(ctrl_emo)[5:8] <- sapply(names(ctrl_emo)[5:8],function(x) paste0(x,"e"))
+
+#ctrl_emo
+
+mds_emo <- cmdscale(as.dist(apply(cor(ctrl_emo, method = "spearman"),1:2,function(x) 1-x)), k = 2)
+
+
+p0<-ggplot()+labs(x="DIM 1", y="DIM 2")+xlim(-1,1)+ylim(-1,1)+theme_bw()+
+  geom_text(data=as.data.frame(mds_emo), aes(x=mds_emo[,1], y=mds_emo[,2], label=rownames(mds_emo), col="Emotional"))+
+  scale_colour_manual(name="",values=c("1","2"))
+
+
+
+
+d<-na.omit(emo_data[emo_data$emo==1,cols])
+mds_emo <- cmdscale(as.dist(apply(cor(d, method = "spearman"),1:2,function(x) 1-x)), k = 2)
+
+d<-na.omit(emo_data[emo_data$emo==0,cols])
+mds_emo_ctrl <- cmdscale(as.dist(apply(cor(d, method = "spearman"),1:2,function(x) 1-x)), k = 2)
+
+d<-na.omit(rat_data[rat_data$rat==1,cols])
+mds_rat <- cmdscale(as.dist(apply(cor(d, method = "spearman"),1:2,function(x) 1-x)), k = 2)
+
+d<-na.omit(rat_data[rat_data$rat==0,cols])
+mds_rat_ctrl <- cmdscale(as.dist(apply(cor(d, method = "spearman"),1:2,function(x) 1-x)), k = 2)
+
+p1<-ggplot()+labs(x="DIM 1", y="DIM 2")+xlim(-1,1)+ylim(-1,1)+theme_bw()+
+  geom_text(data=as.data.frame(mds_emo), aes(x=mds_emo[,1], y=mds_emo[,2], label=rownames(mds_emo), col="Emotional"))+
+  geom_text(data=as.data.frame(mds_emo_ctrl), aes(x=mds_emo_ctrl[,1], y=mds_emo_ctrl[,2], label=rownames(mds_emo_ctrl), col="Control"))+
+  scale_colour_manual(name="",values=c("1","2"))
+  
+p2<-ggplot()+labs(x="DIM 1", y="DIM 2")+xlim(-1,1)+ylim(-1,1)+theme_bw()+
+  geom_text(data=as.data.frame(mds_rat), aes(x=mds_rat[,1], y=mds_rat[,2], label=rownames(mds_rat), col="Rational"))+
+  geom_text(data=as.data.frame(mds_rat_ctrl), aes(x=mds_rat_ctrl[,1], y=mds_rat_ctrl[,2], label=rownames(mds_rat_ctrl), col="Control"))+
+  scale_colour_manual(name="",values=c("1","2"))
+
+p0 <- ggplot()+labs(x=NULL, y=NULL)+xlim(-0.8,0.8)+ylim(-0.8,0.8)+theme_bw()
+p1 <- p0 + geom_text(data=as.data.frame(mds_emo), aes(x=mds_emo[,1], y=mds_emo[,2],
+                                                      label=rownames(mds_emo)))+
+      #labs(title = "Emotional / Control")+
+      geom_text(aes(x=0.55, y=0.65,label="Emotional"), fontface = "bold")
+p2 <- p0 + geom_text(data=as.data.frame(mds_emo_ctrl), aes(x=mds_emo_ctrl[,1], y=mds_emo_ctrl[,2],
+                                                      label=rownames(mds_emo_ctrl)))+
+      #labs(title = "")
+      geom_text(aes(x=0.6, y=0.65,label="Control"), fontface = "bold")
+p3 <- p0 + geom_text(data=as.data.frame(mds_rat), aes(x=mds_rat[,1], y=mds_rat[,2],
+                                                      label=rownames(mds_rat)))+
+      #labs(title = "Rational / Control") 
+      geom_text(aes(x=0.6, y=0.65,label="Rational"), fontface = "bold")
+p4 <- p0 + geom_text(data=as.data.frame(mds_rat_ctrl), aes(x=mds_rat_ctrl[,1], y=mds_rat_ctrl[,2],
+                                                      label=rownames(mds_rat_ctrl)))+
+      #labs(title = "")
+      geom_text(aes(x=0.6, y=0.65,label="Control"), fontface = "bold")
+g <- grid.arrange(p2, p1, p4, p3, ncol = 2, nrow = 2)
+
+#g<-arrangeGrob(p2, p1, p4, p3, ncol = 2, nrow = 2)
+
+ggsave('H1.pdf', g)
+
+```
+
+```{r, include=FALSE} 
+#RSB vs EMB correlation in control groups
+d<-na.omit(emo_data[emo_data$emo==0,58:59])
+cor_emo_ctrl <- round(as.dist(cor(d, method = "spearman")),2)
+
+d<-na.omit(rat_data[rat_data$rat==0,58:59])
+cor_rat_ctrl <- round(as.dist(cor(d, method = "spearman")),2)
+
+cbind(cor_emo_ctrl, cor_rat_ctrl)
+```
+
+
+На графиках можно заметить, что рассматриваемые виды эко-поведения достаточно далеки друг от друга, как в контрольной так и в экспериментальной группах, т.е. неоднородны. Эта неоднородность достаточно устойчива, воздействие стимулов не приводит к радикальным изменениям. Визуально относительно близкими можно было бы признать ресурсосбережение (RSB) и эко-мобильность (EMB) в контрольных группах, но корреляция между ними не высока ~ `r round(mean(cor_emo_ctrl,cor_rat_ctrl), 2)`.
+
+
+## Проверка гипотезы №2
+
+
+*Гипотеза H2. Люди обычно переоценивают собственную склонность к эко-поведению и недооценивают склонность окружающих.*
+
+Посмотрим в разрезе групп на графики плотности распределения самооцененной склонности (self) к различным видам эко-поведения и оцененной склонности окружающих (other). При построении графиков для наглядности применено сглаживание.
+
+
+```{r, cache=FALSE}
+
+dplot <- function (d, s, o, t){
+  plot(density(d[,s], bw = 0.15), type = "l", col = "1", lwd = 1, bty="n", main = "",#main = paste(s,t),
+       yaxt="n", ylim=c(0,2.5), xaxt="n") 
+  axis(side=1,at=c(0.0,0.5,1.0))
+  lines(density(d[,o], bw = 0.15), lty = 2, lwd = 1, col = "2")
+  
+  #legend("topright",legend = c("self", "other"), 
+  #       col = c("1","2"), lwd = c(1,1), 
+  #       lty = c(1,2), bty = "n")
+  
+ #print(paste0(s," ", o, " ", t)) #print label for wilcox data
+  
+ #t.test(d[,s], d[,o], paired = TRUE, alternative = "two.sided") #Критерий Стьюдента
+ w<-wilcox.test(d[,s], d[,o], paired = TRUE, alternative = "greater") #Критерий Уилкоксона
+ legend("topright",legend = c(s, t, ifelse(w$p.value<0.01,"p < 0.01", "p > 0.1")), bty = "n")
+ #w # print wilcox output
+}
+
+#RB
+cols <- c(56:59,61:64)
+
+par(mfrow = c(4,4), mar=c(1.8,1.1,1.5,1))
+d<-na.omit(rat_data[rat_data$rat==0,cols])
+dplot(d,"RB","RBo","Control")
+d<-na.omit(rat_data[rat_data$rat==1,cols])
+dplot(d,"RB","RBo","Rational")
+d<-na.omit(emo_data[emo_data$emo==0,cols])
+dplot(d,"RB","RBo","Control")
+d<-na.omit(emo_data[emo_data$emo==1,cols])
+dplot(d,"RB","RBo","Emotional")
+#ESB
+#par(mfrow = c(4,4), mar=c(2,2,2,1))
+d<-na.omit(rat_data[rat_data$rat==0,cols])
+dplot(d,"ESB","ESBo","Control")
+d<-na.omit(rat_data[rat_data$rat==1,cols])
+dplot(d,"ESB","ESBo","Rational")
+d<-na.omit(emo_data[emo_data$emo==0,cols])
+dplot(d,"ESB","ESBo","Control")
+d<-na.omit(emo_data[emo_data$emo==1,cols])
+dplot(d,"ESB","ESBo","Emotional")
+
+#RSB
+#par(mfrow = c(2,2), mar=c(2,2,2,1))
+d<-na.omit(rat_data[rat_data$rat==0,cols])
+dplot(d,"RSB","RSBo","Control")
+d<-na.omit(rat_data[rat_data$rat==1,cols])
+dplot(d,"RSB","RSBo","Rational")
+d<-na.omit(emo_data[emo_data$emo==0,cols])
+dplot(d,"RSB","RSBo","Control")
+d<-na.omit(emo_data[emo_data$emo==1,cols])
+dplot(d,"RSB","RSBo","Emotional")
+
+#EMB
+#par(mfrow = c(2,2), mar=c(2,2,2,1))
+d<-na.omit(rat_data[rat_data$rat==0,cols])
+dplot(d,"EMB","EMBo","Control")
+d<-na.omit(rat_data[rat_data$rat==1,cols])
+dplot(d,"EMB","EMBo","Rational")
+d<-na.omit(emo_data[emo_data$emo==0,cols])
+dplot(d,"EMB","EMBo","Control")
+d<-na.omit(emo_data[emo_data$emo==1,cols])
+dplot(d,"EMB","EMBo","Emotional")
+
+dopdf('H2.pdf')
+
+```
+
+Пунктирной линией показана оценка окружающих, сплошной - самооценка.
+
+
+## Проверка гипотезы №3
+
+*Гипотеза H3. Склонность к тому или иному виду эко-поведения ситуативно подвержена влиянию стимулов, как эмоционального, так и рационального характера.*
+
+
+Для проверки этой гипотезы определим различия между средними значениями индекса склонности в контрольной и исследуемой группах по каждому виду эко-поведения. Рассмотрим различия, как в исходных (unmatched), так и в сбалансированных (matched) выборках (рис.).
+
+
+По левой шкале показан индекс склонности к соответствующему виду эко-поведения, на графике среднее значение по группам. Показано p-value для одностороннего критерия Манна-Уитни.
+
+
+```{r, warning=FALSE, message=FALSE}
+getmeans <- function (c) {
+  emo_all<-data[!is.na(data$emo),]
+  rat_all<-data[!is.na(data$rat),]
+  
+  d<-rbind(
+    cbind( mean(emo_data[emo_data$emo==0,c], na.rm = T),
+          nrow(emo_data[emo_data$emo==0 & !is.na(emo_data[,c]),]),
+          mean(emo_data[emo_data$emo==1,c], na.rm = T),
+          nrow(emo_data[emo_data$emo==1 & !is.na(emo_data[,c]),]),
+          with(emo_data, wilcox.test(as.formula(paste(c,"~ emo")), 
+                                     paired = F, alternative = "less"))$p.value),
+    cbind(mean(rat_data[rat_data$rat==0,c], na.rm = T),
+          nrow(rat_data[rat_data$rat==0 & !is.na(rat_data[,c]),]),
+          mean(rat_data[rat_data$rat==1,c], na.rm = T),
+          nrow(rat_data[rat_data$rat==1 & !is.na(rat_data[,c]),]),
+          with(rat_data, wilcox.test(as.formula(paste(c,"~ rat")),
+                                     paired = F, alternative = "less"))$p.value),
+    cbind(mean(emo_all[emo_all$emo==0,c], na.rm = T),
+          nrow(emo_all[emo_all$emo==0 & !is.na(emo_all[,c]),]),
+          mean(emo_all[emo_all$emo==1,c], na.rm = T),
+          nrow(emo_all[emo_all$emo==1 & !is.na(emo_all[,c]),]),
+          with(emo_all, wilcox.test(as.formula(paste(c,"~ emo")), 
+                                     paired = F, alternative = "less"))$p.value),
+    cbind(mean(rat_all[rat_all$rat==0,c], na.rm = T),
+          nrow(rat_all[rat_all$rat==0 & !is.na(rat_all[,c]),]),
+          mean(rat_all[rat_all$rat==1,c], na.rm = T),
+          nrow(rat_all[rat_all$rat==1 & !is.na(rat_all[,c]),]),
+          with(rat_all, wilcox.test(as.formula(paste(c,"~ rat")),
+                                     paired = F, alternative = "less"))$p.value)
+  )
+  d<-cbind(d[,-5],d[,3]-d[,1],d[,5]) #reorder and add diff
+  d<-data.frame(d)
+  d<-cbind(c("Emotional (matched)","Rational (matched)",
+             "Emotional (unmatched)", "Rational (unmatched)"),d)
+  names(d) <- c("","Means Control","Obs. Control","Means Treated","Obs. Treated",
+                "Means Diff","p-value")
+  
+  table <- kable(d, digits = 3, align = 'l', caption = paste('Table:',c,'u-тест Манна-Уитни $H_{0}: \\mu_{C} < \\mu_{T}$'))
+  
+  par(mfrow = c(2,2), mar=c(2,2,1.5,1))
+  
+  by<-factor(emo_data$emo, labels = c("Control","Emotional"))
+  with(emo_data, plotmeans(as.formula(paste(c,"~ by")), main = "",#paste(c,"means, matched groups"), 
+                           frame = F, mean.labels = F, connect = T, xlab = "", ylim=c(0.4,0.8)))
+  par(new=F)
+  text(cex=1, font=2, x=2.1, y=0.8, xpd=T, adj=0, paste0(c,"\nmatched\np = ",round(d[1,7],3)))
+
+  by<-factor(rat_data$rat, labels = c("Control","Rational"))
+  with(rat_data, plotmeans(as.formula(paste(c,"~ by")), main = "",#paste(c,"means, matched groups"), 
+                           frame = F, mean.labels = F, connect = T, xlab = "", ylim=c(0.4,0.8)))
+  par(new=F)
+  text(cex=1, font=2, x=2.1, y=0.8, xpd=T, adj=0, paste0(c,"\nmatched\np = ",round(d[2,7],3)))
+  
+  
+  
+  by<-factor(emo_all$emo, labels = c("Control","Emotional"))
+  with(emo_all, plotmeans(as.formula(paste(c,"~ by")), main = "",#paste(c,"means, matched groups"), 
+                           frame = F, mean.labels = F, connect = T, xlab = "", ylim=c(0.4,0.8)))
+  par(new=F)
+  text(cex=1, font=2, x=2.1, y=0.8, xpd=T, adj=0, paste0(c,"\nunmatched\np = ",round(d[3,7],3)))
+
+  by<-factor(rat_all$rat, labels = c("Control","Rational"))
+  with(rat_all, plotmeans(as.formula(paste(c,"~ by")), main = "",#paste(c,"means, matched groups"), 
+                           frame = F, mean.labels = F, connect = T, xlab = "", ylim=c(0.4,0.8)))
+  par(new=F)
+  text(cex=1, font=2, x=2.1, y=0.8, xpd=T, adj=0, paste0(c,"\nunmatched\np = ",round(d[4,7],3)))
+  
+  
+  #with(data, plotmeans(as.formula(paste(c,"~ group")), main = "",#paste(c,"means, unmatched groups"), 
+  #                         frame = F, mean.labels = F, connect=F, xlab = "", ylim=c(0.4,0.8)))
+  #par(new=F)
+  #text(cex=1, font=2, x=2.8, y=0.8, xpd=T, adj=0, paste0(c,"\nunmatched\np = 0.00"))
+  
+  table
+}
+getmeans("RB")
+dopdf('H3_1.pdf')
+getmeans("ESB")
+dopdf('H3_2.pdf')
+getmeans("RSB")
+dopdf('H3_3.pdf')
+getmeans("EMB")
+dopdf('H3_4.pdf')
+
+```
+
+
+*Гипотеза H3а. Склонность к более затратным видам поведения менее подвержена ситуативному влиянию стимулов (low-cost hypothesis).*
+
+
+## Анализ роли отдельных признаков
+
+
+Для этой цели построим регрессионную модель, учитывающую все интересующие признаки и контрольные переменные. Наша базовая спецификация модели выглядит следующим образом:
+
+$Y = \beta_{0} + \beta_{1}s + \gamma X + \varepsilon$,
+
+
+где $Y$ - зависимая переменная, отражающая индивидуалную оценку склонности к тому или иному виду поведения (RB, ESB, RSB, EMB) в зависимости от модели;
+
+
+$s$ - бинарная независимая переменная пренадлежности к экспериментальной $(s=1)$ или контрольной группе $(s=0)$, отражающая, соответствено, эмоциональный или рациональный стимул в зависимости от модели;
+
+
+$X$ - вектор контрольных переменных (пол, возраст и др.).
+
+
+Далее представлены сводные результаты на основе простой линейной регрессии для каждого стимула. Показано, что в рамках склонности к тому или иному виду поведения ситуативные стимулы влияют по разному, детерминируя вклад тех или иных индивидуальных характеристик респондентов.
+
+```{r, warning=FALSE, message=FALSE}
+library(lmtest)
+library(sandwich)
+library(DescTools)
+library(car)
+library(caret)
+```
+
+
+```{r} 
+#Функции агрегации информации о модели
+fit.summary <- function (x) { #Сводная информация и базовые тесты для lm + графики
+  print(summary(x)) #F-stat p < 0.05 -> good model
+  #qqnorm(x$residuals)
+  #qqline(x$residuals, col = 2)
+  print(shapiro.test(x$residuals)) #p > 0.05 -> normal distrib
+  print(bptest(x)) # studentized Breusch-Pagan test if p<0.05 -> heteroskedacity is present
+  #coeftest(x) #test significance
+  print(coeftest(x, vcov = vcovHC(x, "HC1")))  #robust like in Stata
+  print(PseudoR2(x, which = "McFaddenAdj"))
+  plot(x)
+  avPlots(x)
+  }
+
+fit.plots <- function (x, v) {
+  avPlots(x, as.formula(v), id=F)
+  plot(x)
+  }
+
+fit.bootstrap <- function (x, r, ...) { #бутстрап
+  set.seed(1313)
+  mboot <- Boot(x, R = r, ...) # bootstrap samples--too small to be useful
+  cbind(summary(mboot),confint(mboot))
+  }
+
+fit.coeff <- function (x, boot = F, r = 1000) { #вывод коэффициентов + бутстрап
+  df<-cbind(summary(x)$coefficients[,-3], 
+            coeftest(x, vcov = vcovHC(x, "HC1"))[,c(-1,-3)])  #robust like in Stata
+  df<-data.frame(df)
+  names(df) <- c("Estimate","SE","pvalue","Robust.SE","Robust.pvalue")
+  if (boot) {
+    df<-cbind(df, 
+              fit.bootstrap(x, r)[,c(-1,-2)])
+  }
+  write.table(df, file = paste0('models\\',deparse(substitute(x)),'_coef.csv'), sep=";", dec=",")
+  df}
+
+fit.params <- function (x) { #вывод базовых свойств и некоторых тестов
+  rname <-deparse(substitute(x))
+  s<-summary(x) #F-stat p < 0.05 -> good model
+  t<-shapiro.test(x$residuals) #p > 0.05 -> normal distrib
+  l<-bptest(x) # studentized Breusch-Pagan test if p<0.05 -> heteroskedacity is present
+  f<-PseudoR2(x, which = "McFaddenAdj")
+  c<-coeftest(x, vcov = vcovHC(x, "HC1"))  #robust like in Stata
+  df<-data.frame(type = as.character(s[["call"]][[1]]),
+             src = as.character(s[["call"]][["data"]]),
+             group = strsplit(as.character(s[["terms"]][1])," ~ ")[[3]],
+             r.squared = ifelse(!is.null(s$r.squared),s$r.squared,NA), 
+             adj.r.squared = ifelse(!is.null(s$adj.r.squared),s$adj.r.squared,NA), 
+             #adj.r.pseudo = f,
+             shapiro.p.value = t$p.value,
+             bp.p.value = l$p.value,
+             f.p.value = ifelse(!is.null(s[["fstatistic"]]),
+                            pf(s[["fstatistic"]][["value"]], 
+                              s[["fstatistic"]][["numdf"]], 
+                              s[["fstatistic"]][["dendf"]], lower.tail = F), NA))#,
+             #aic = ifelse(!is.null(s[["aic"]]),s[["aic"]],NA))
+  if (is.null(rname))
+    row.names(df)<-s[["terms"]][[2]]
+      else row.names(df)<-rname
+  df}
+
+```
+
+
+
+
+```{r cache=TRUE, include=FALSE}
+#RB
+emo_all<-data[!is.na(data$emo),]
+emo_all<-na.omit(emo_all[,c(29,32:35,45:58)])
+
+pairs(RB ~ emo+sex+income+isworking+log_age+log_city_size+TC, 
+         data = emo_data, na.action=na.exclude)
+
+rat_all<-data[!is.na(data$rat),]
+rat_all<-na.omit(rat_all[,c(30,32:35,45:58)])
+
+pairs(RB ~ rat+sex+income+isworking+log_age+log_city_size+TC, 
+         data = rat_data, na.action=na.exclude)
+```
+
+```{r, cache=TRUE}
+emo_data$month <- factor(emo_data$month)
+dummy <- dummyVars( ~ month, data = emo_data)
+df<-predict(dummy, newdata=emo_data)
+emo_data<-cbind(emo_data,df)
+
+rat_data$month <- factor(rat_data$month)
+dummy <- dummyVars( ~ month, data = rat_data)
+df<-predict(dummy, newdata=rat_data)
+rat_data<-cbind(rat_data,df)
+```
+
+
+```{r RB, cache=TRUE}
+#models  RB
+emo_all<-data[!is.na(data$emo),]
+emo_all<-na.omit(emo_all[,c(29,32:35,45:58)])
+
+emo_all$month <- factor(emo_all$month)
+dummy <- dummyVars( ~ month, data = emo_all)
+df<-predict(dummy, newdata=emo_all)
+emo_all<-cbind(emo_all,df)
+
+#whole data lm
+RB_emo_m0 <- lm(RB ~ emo+sex+income+isworking+log_age+log_city_size+TC+log_time_RB+log_time_TC+
+  +month.1 +month.2 +month.3 +month.4 +month.6 +month.7 +month.8 +month.9 +month.10 +month.11+month.12, 
+         data = emo_all, na.action=na.exclude)
+#matched data lm
+RB_emo_m1 <- lm(RB ~ emo+sex+income+isworking+log_age+log_city_size+TC+log_time_RB+log_time_TC+
+  +month.1 +month.2 +month.3 +month.4 +month.6 +month.7 +month.8 +month.9 +month.10 +month.11+month.12, 
+         data = emo_data, na.action=na.exclude)
+#matched data lm no controls
+RB_emo_m2 <- lm(RB ~ emo, data = emo_data, na.action=na.exclude)
+
+rat_all<-data[!is.na(data$rat),]
+rat_all<-na.omit(rat_all[,c(30,32:35,45:58)])
+
+
+rat_all$month <- factor(rat_all$month)
+dummy <- dummyVars( ~ month, data = rat_all)
+df<-predict(dummy, newdata=rat_all)
+rat_all<-cbind(rat_all,df)
+
+
+#whole data lm
+RB_rat_m0 <- lm(RB ~ rat+sex+income+isworking+log_age+log_city_size+TC+log_time_RB+log_time_TC+
+  +month.1 +month.2 +month.3 +month.4 +month.6 +month.7 +month.8 +month.9 +month.10 +month.11+month.12, 
+         data = rat_all, na.action=na.exclude)
+#matched data lm
+RB_rat_m1 <- lm(RB ~ rat+sex+income+isworking+log_age+log_city_size+TC+log_time_RB+log_time_TC+
+  +month.1 +month.2 +month.3 +month.4 +month.6 +month.7 +month.8 +month.9 +month.10 +month.11+month.12, 
+         data = rat_data, na.action=na.exclude)
+#matched data lm no controls
+RB_rat_m2 <- lm(RB ~ rat, data = rat_data, na.action=na.exclude)
+
+```
+
+```{r ESB, cache=TRUE}
+
+#models  ESB
+emo_all<-data[!is.na(data$emo),]
+emo_all<-na.omit(emo_all[,c(29,32:35,45:58)])
+
+emo_all$month <- factor(emo_all$month)
+dummy <- dummyVars( ~ month, data = emo_all)
+df<-predict(dummy, newdata=emo_all)
+emo_all<-cbind(emo_all,df)
+
+ESB_emo_m0 <- lm(ESB ~ emo+sex+income+isworking+log_age+log_city_size+TC+log_time_ESB+log_time_TC+
+  +month.1 +month.2 +month.3 +month.4 +month.6 +month.7 +month.8 +month.9 +month.10 +month.11+month.12, 
+         data = emo_all, na.action=na.exclude)
+#matched data lm
+ESB_emo_m1 <- lm(ESB ~ emo+sex+income+isworking+log_age+log_city_size+TC+log_time_ESB+log_time_TC+
+  +month.1 +month.2 +month.3 +month.4 +month.6 +month.7 +month.8 +month.9 +month.10 +month.11+month.12, 
+         data = emo_data, na.action=na.exclude)
+ESB_emo_m2 <- lm(ESB ~ emo, data = emo_data, na.action=na.exclude)
+
+rat_all<-data[!is.na(data$rat),]
+rat_all<-na.omit(rat_all[,c(30,32:35,45:58)])
+
+
+rat_all$month <- factor(rat_all$month)
+dummy <- dummyVars( ~ month, data = rat_all)
+df<-predict(dummy, newdata=rat_all)
+rat_all<-cbind(rat_all,df)
+
+
+ESB_rat_m0 <- lm(ESB ~ rat+sex+income+isworking+log_age+log_city_size+TC+log_time_ESB+log_time_TC+
+  +month.1 +month.2 +month.3 +month.4 +month.6 +month.7 +month.8 +month.9 +month.10 +month.11+month.12, 
+         data = rat_all, na.action=na.exclude)
+#matched data lm
+ESB_rat_m1 <- lm(ESB ~ rat+sex+income+isworking+log_age+log_city_size+TC+log_time_ESB+log_time_TC+
+  +month.1 +month.2 +month.3 +month.4 +month.6 +month.7 +month.8 +month.9 +month.10 +month.11+month.12, 
+         data = rat_data, na.action=na.exclude)
+ESB_rat_m2 <- lm(ESB ~ rat, data = rat_data, na.action=na.exclude)
+```
+
+
+```{r RSB, cache=TRUE}
+#models  RSB
+emo_all<-data[!is.na(data$emo),]
+emo_all<-na.omit(emo_all[,c(29,32:35,45:58)])
+
+
+emo_all$month <- factor(emo_all$month)
+dummy <- dummyVars( ~ month, data = emo_all)
+df<-predict(dummy, newdata=emo_all)
+emo_all<-cbind(emo_all,df)
+
+#whole data lm
+RSB_emo_m0 <- lm(RSB ~ emo+sex+income+isworking+log_age+log_city_size+TC+log_time_RSB+log_time_TC+
+  +month.1 +month.2 +month.3 +month.4 +month.6 +month.7 +month.8 +month.9 +month.10 +month.11+month.12,  
+         data = emo_all, na.action=na.exclude)
+#matched data lm
+RSB_emo_m1 <- lm(RSB ~ emo+sex+income+isworking+log_age+log_city_size+TC+log_time_RSB+log_time_TC+
+  +month.1 +month.2 +month.3 +month.4 +month.6 +month.7 +month.8 +month.9 +month.10 +month.11+month.12,  
+         data = emo_data, na.action=na.exclude)
+RSB_emo_m2 <- lm(RSB ~ emo, data = emo_data, na.action=na.exclude)
+
+rat_all<-data[!is.na(data$rat),]
+rat_all<-na.omit(rat_all[,c(30,32:35,45:58)])
+
+rat_all$month <- factor(rat_all$month)
+dummy <- dummyVars( ~ month, data = rat_all)
+df<-predict(dummy, newdata=rat_all)
+rat_all<-cbind(rat_all,df)
+
+#whole data lm
+RSB_rat_m0 <- lm(RSB ~ rat+sex+income+isworking+log_age+log_city_size+TC+log_time_RSB+log_time_TC+
+  +month.1 +month.2 +month.3 +month.4 +month.6 +month.7 +month.8 +month.9 +month.10 +month.11+month.12,  
+         data = rat_all, na.action=na.exclude)
+#matched data lm
+RSB_rat_m1 <- lm(RSB ~ rat+sex+income+isworking+log_age+log_city_size+TC+log_time_RSB+log_time_TC+
+  +month.1 +month.2 +month.3 +month.4 +month.6 +month.7 +month.8 +month.9 +month.10 +month.11+month.12,  
+         data = rat_data, na.action=na.exclude)
+RSB_rat_m2 <- lm(RSB ~ rat, data = rat_data, na.action=na.exclude)
+```
+
+
+```{r EMB, cache=TRUE}
+#models  EMB
+emo_all<-data[!is.na(data$emo),]
+emo_all<-na.omit(emo_all[,c(29,32:35,45:58)])
+
+emo_all$month <- factor(emo_all$month)
+dummy <- dummyVars( ~ month, data = emo_all)
+df<-predict(dummy, newdata=emo_all)
+emo_all<-cbind(emo_all,df)
+
+#whole data lm
+EMB_emo_m0 <- lm(EMB ~ emo+sex+income+isworking+log_age+log_city_size+TC+log_time_EMB+log_time_TC+
+  +month.1 +month.2 +month.3 +month.4 +month.6 +month.7 +month.8 +month.9 +month.10 +month.11+month.12,  
+         data = emo_all, na.action=na.exclude)
+#matched data lm
+EMB_emo_m1 <- lm(EMB ~ emo+sex+income+isworking+log_age+log_city_size+TC+log_time_EMB+log_time_TC+
+  +month.1 +month.2 +month.3 +month.4 +month.6 +month.7 +month.8 +month.9 +month.10 +month.11+month.12,  
+         data = emo_data, na.action=na.exclude)
+EMB_emo_m2 <- lm(EMB ~ emo, data = emo_data, na.action=na.exclude)
+
+
+rat_all<-data[!is.na(data$rat),]
+rat_all<-na.omit(rat_all[,c(30,32:35,45:58)])
+
+rat_all$month <- factor(rat_all$month)
+dummy <- dummyVars( ~ month, data = rat_all)
+df<-predict(dummy, newdata=rat_all)
+rat_all<-cbind(rat_all,df)
+
+#whole data lm
+EMB_rat_m0 <- lm(EMB ~ rat+sex+income+isworking+log_age+log_city_size+TC+log_time_EMB+log_time_TC+
+  +month.1 +month.2 +month.3 +month.4 +month.6 +month.7 +month.8 +month.9 +month.10 +month.11+month.12,  
+         data = rat_all, na.action=na.exclude)
+#matched data lm
+EMB_rat_m1 <- lm(EMB ~ rat+sex+income+isworking+log_age+log_city_size+TC+log_time_EMB+log_time_TC+
+  +month.1 +month.2 +month.3 +month.4 +month.6 +month.7 +month.8 +month.9 +month.10 +month.11+month.12,  
+         data = rat_data, na.action=na.exclude)
+EMB_rat_m2 <- lm(EMB ~ rat, data = rat_data, na.action=na.exclude)
+
+```
+
+
+## Приложение
+
+
+```{r, cache=TRUE, warning=FALSE, eval=TRUE}
+#RB
+fit.coeff(RB_emo_m0, boot = T)
+fit.plots(RB_emo_m0, "~ emo")
+fit.coeff(RB_rat_m0, boot = T)
+fit.plots(RB_rat_m0, "~ rat")
+
+fit.coeff(RB_emo_m1, boot = T)
+fit.plots(RB_emo_m1, "~ emo")
+fit.coeff(RB_rat_m1, boot = T)
+fit.plots(RB_rat_m1, "~ rat")
+
+fit.coeff(RB_emo_m2, boot = T)
+fit.plots(RB_emo_m2, "~ emo")
+fit.coeff(RB_rat_m2, boot = T)
+fit.plots(RB_rat_m2, "~ rat")
+
+```
+
+
+```{r, cache=TRUE, warning=FALSE, eval=TRUE}
+#ESB
+fit.coeff(ESB_emo_m0, boot = T)
+fit.plots(ESB_emo_m0, "~ emo")
+fit.coeff(ESB_rat_m0, boot = T)
+fit.plots(ESB_rat_m0, "~ rat")
+
+fit.coeff(ESB_emo_m1, boot = T)
+fit.plots(ESB_emo_m1, "~ emo")
+fit.coeff(ESB_rat_m1, boot = T)
+fit.plots(ESB_rat_m1, "~ rat")
+
+fit.coeff(ESB_emo_m2, boot = T)
+fit.plots(ESB_emo_m2, "~ emo")
+fit.coeff(ESB_rat_m2, boot = T)
+fit.plots(ESB_rat_m2, "~ rat")
+```
+
+```{r, cache=TRUE, warning=FALSE, eval=TRUE}
+#RSB
+fit.coeff(RSB_emo_m0, boot = T)
+fit.plots(RSB_emo_m0, "~ emo")
+fit.coeff(RSB_rat_m0, boot = T)
+fit.plots(RSB_rat_m0, "~ rat")
+
+fit.coeff(RSB_emo_m1, boot = T)
+fit.plots(RSB_emo_m1, "~ emo")
+fit.coeff(RSB_rat_m1, boot = T)
+fit.plots(RSB_rat_m1, "~ rat")
+
+fit.coeff(RSB_emo_m2, boot = T)
+fit.plots(RSB_emo_m2, "~ emo")
+fit.coeff(RSB_rat_m2, boot = T)
+fit.plots(RSB_rat_m2, "~ rat")
+
+```
+
+```{r, cache=TRUE, warning=FALSE, eval=TRUE}
+#EMB
+fit.coeff(EMB_emo_m0, boot = T)
+fit.plots(EMB_emo_m0, "~ emo")
+fit.coeff(EMB_rat_m0, boot = T)
+fit.plots(EMB_rat_m0, "~ rat")
+
+fit.coeff(EMB_emo_m1, boot = T)
+fit.plots(EMB_emo_m1, "~ emo")
+fit.coeff(EMB_rat_m1, boot = T)
+fit.plots(EMB_rat_m1, "~ rat")
+
+fit.coeff(EMB_emo_m2, boot = T)
+fit.plots(EMB_emo_m2, "~ emo")
+fit.coeff(EMB_rat_m2, boot = T)
+fit.plots(EMB_rat_m2, "~ rat")
+
+```
+
+## Приложение
+
+
+```{r, cache=TRUE, eval=TRUE}
+#make summary
+df <- rbind(
+  fit.params(RB_emo_m0),
+  fit.params(RB_emo_m1),
+
+  fit.params(RB_rat_m0),
+  fit.params(RB_rat_m1),
+
+  fit.params(ESB_emo_m0),
+  fit.params(ESB_emo_m1),
+
+  fit.params(ESB_rat_m0),
+  fit.params(ESB_rat_m1),
+
+  fit.params(RSB_emo_m0),
+  fit.params(RSB_emo_m1),
+
+  fit.params(RSB_rat_m0),
+  fit.params(RSB_rat_m1),
+
+  fit.params(EMB_emo_m0),
+  fit.params(EMB_emo_m1),
+
+  fit.params(EMB_rat_m0),
+  fit.params(EMB_rat_m1)
+)
+write.table(df, file = paste0('models\\models_pars.csv'), sep=";", dec=",")
+df
+```
+
+```{r, cache=TRUE, eval=TRUE}
+#make summary
+df <- rbind(
+  fit.params(RB_emo_m2),
+
+  fit.params(RB_rat_m2),
+
+  fit.params(ESB_emo_m2),
+
+  fit.params(ESB_rat_m2),
+
+  fit.params(RSB_emo_m2),
+
+  fit.params(RSB_rat_m2),
+
+  fit.params(EMB_emo_m2),
+
+  fit.params(EMB_rat_m2)
+)
+write.table(df, file = paste0('models\\models_pars_nocontrols.csv'), sep=";", dec=",")
+df
+```
+
+```{r, cache=TRUE, eval=FALSE, include=FALSE}
+  #F-stat p < 0.05 -> good model
+  #shapiro.test #p > 0.05 -> normal distrib
+  #bptest(x) # studentized Breusch-Pagan test if p<0.05 -> heteroskedacity is present
+  #make summary
+  #fit.summary(RB_emo_m0)
+  #fit.summary(RB_emo_m1)
+
+  #fit.summary(ESB_emo_m0)
+  #fit.summary(ESB_emo_m1)
+
+  #fit.summary(RSB_emo_m0)
+  #fit.summary(RSB_emo_m1)
+
+  #fit.summary(EMB_emo_m0)
+  #fit.summary(EMB_emo_m1)
+
+```
+
+
+
+.
