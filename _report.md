@@ -31,7 +31,7 @@ output:
 
 *Гипотеза H3а.* Склонность к более затратным видам поведения менее подвержена ситуативному влиянию стимулов (low-cost hypothesis).
 
-## Подготовка данных
+## Preparing
 
 Ниже представленны параметры окружения R. Производится загрузка данных, логарифмирование некоторых признаков (возраст, размер города, время ответа). Вычисляются аддитивные индексы, затем производится их унификация в диапазоне [0...1] для удобства графического отображения и интерпретации.
 
@@ -884,6 +884,329 @@ p-value > 0.05 означает отсутствие значимых разли
 
 # Результаты
 
+# SEM & Validity & Power
+
+
+```r
+library(lavaan)
+library(semPlot)
+library(semPower)
+library(lavaanPlot)
+library(psych)
+library(pwr)
+library(MBESS)
+library(GPArotation)
+```
+
+
+```r
+#power analysis
+pwr.anova.test(k = 2, n = , sig.level = 0.05, power = 0.9, f = 0.25)
+```
+
+```
+## 
+##      Balanced one-way analysis of variance power calculation 
+## 
+##               k = 2
+##               n = 85.03128
+##               f = 0.25
+##       sig.level = 0.05
+##           power = 0.9
+## 
+## NOTE: n is number in each group
+```
+
+```r
+pwr.anova.test(k = 3, n = , sig.level = 0.05, power = 0.9, f = 0.25)
+```
+
+```
+## 
+##      Balanced one-way analysis of variance power calculation 
+## 
+##               k = 3
+##               n = 68.49707
+##               f = 0.25
+##       sig.level = 0.05
+##           power = 0.9
+## 
+## NOTE: n is number in each group
+```
+
+```r
+#f - 0.25 is medium size effect
+#k - number of groups
+```
+
+
+
+```r
+#Cronbach's alpha and McDonald's omega
+#0.7 - 0.79 - acceptable
+#0.8 - 0.89 - good
+#0.6 - 0.69 - questionable
+
+#alpha(data[,c("case_1_1","case_1_2","case_2_1","case_2_2")], check.keys = TRUE)
+#alpha(data[,c("case_3_1","case_3_2","case_4_1","case_4_2")], check.keys = TRUE)
+#alpha(data[,c("case_5_1","case_5_2","case_6_1","case_6_2")], check.keys = TRUE)
+#alpha(data[,c("case_7_1","case_7_2","case_8_1","case_8_2")], check.keys = TRUE)
+
+omega(data[,c("case_1_1","case_1_2","case_2_1","case_2_2")], check.keys = TRUE) #RB omg_t 0.85
+```
+
+![](_report_files/figure-html/unnamed-chunk-20-1.png)<!-- -->
+
+```
+## Omega 
+## Call: omegah(m = m, nfactors = nfactors, fm = fm, key = key, flip = flip, 
+##     digits = digits, title = title, sl = sl, labels = labels, 
+##     plot = plot, n.obs = n.obs, rotate = rotate, Phi = Phi, option = option, 
+##     covar = covar, check.keys = TRUE)
+## Alpha:                 0.63 
+## G.6:                   0.71 
+## Omega Hierarchical:    0.27 
+## Omega H asymptotic:    0.32 
+## Omega Total            0.85 
+## 
+## Schmid Leiman Factor loadings greater than  0.2 
+##             g   F1*  F2*  F3*   h2   u2   p2
+## case_1_1 0.27       0.71      0.61 0.39 0.12
+## case_1_2 0.31       0.72      0.64 0.36 0.15
+## case_2_1 0.41  0.76           0.78 0.22 0.22
+## case_2_2 0.45  0.76           0.81 0.19 0.25
+## 
+## With eigenvalues of:
+##    g  F1*  F2*  F3* 
+## 0.54 1.15 1.02 0.12 
+## 
+## general/max  0.47   max/min =   9.22
+## mean percent general =  0.18    with sd =  0.06 and cv of  0.33 
+## Explained Common Variance of the general factor =  0.19 
+## 
+## The degrees of freedom are -3  and the fit is  0 
+## The number of observations was  320  with Chi Square =  0  with prob <  NA
+## The root mean square of the residuals is  0 
+## The df corrected root mean square of the residuals is  NA
+## 
+## Compare this with the adequacy of just a general factor and no group factors
+## The degrees of freedom for just the general factor are 2  and the fit is  0.86 
+## The number of observations was  320  with Chi Square =  271.54  with prob <  1.1e-59
+## The root mean square of the residuals is  0.3 
+## The df corrected root mean square of the residuals is  0.52 
+## 
+## RMSEA index =  0.649  and the 10 % confidence intervals are  0.586 0.716
+## BIC =  260 
+## 
+## Measures of factor score adequacy             
+##                                                   g  F1*  F2*   F3*
+## Correlation of scores with factors             0.53 0.83 0.82  0.56
+## Multiple R square of scores with factors       0.28 0.68 0.67  0.32
+## Minimum correlation of factor score estimates -0.44 0.36 0.34 -0.36
+## 
+##  Total, General and Subset omega for each subset
+##                                                  g  F1*  F2* F3*
+## Omega total for total scores and subscales    0.85 0.88 0.76  NA
+## Omega general for total scores and subscales  0.27 0.21 0.11  NA
+## Omega group for total scores and subscales    0.57 0.67 0.65  NA
+```
+
+```r
+omega(data[,c("case_3_1","case_3_2","case_4_1","case_4_2")], check.keys = TRUE) #ESB omg_t 0.84
+```
+
+![](_report_files/figure-html/unnamed-chunk-20-2.png)<!-- -->
+
+```
+## Omega 
+## Call: omegah(m = m, nfactors = nfactors, fm = fm, key = key, flip = flip, 
+##     digits = digits, title = title, sl = sl, labels = labels, 
+##     plot = plot, n.obs = n.obs, rotate = rotate, Phi = Phi, option = option, 
+##     covar = covar, check.keys = TRUE)
+## Alpha:                 0.61 
+## G.6:                   0.68 
+## Omega Hierarchical:    0.45 
+## Omega H asymptotic:    0.54 
+## Omega Total            0.84 
+## 
+## Schmid Leiman Factor loadings greater than  0.2 
+##              g   F1*  F2*   F3*   h2   u2   p2
+## case_3_1-      -0.83            0.76 0.24 0.00
+## case_3_2- 0.20 -0.81       0.22 0.72 0.28 0.06
+## case_4_1  0.75            -0.23 0.62 0.38 0.91
+## case_4_2  0.83                  0.72 0.28 0.95
+## 
+## With eigenvalues of:
+##    g  F1*  F2*  F3* 
+## 1.29 1.35 0.00 0.17 
+## 
+## general/max  0.95   max/min =   387.47
+## mean percent general =  0.48    with sd =  0.52 and cv of  1.08 
+## Explained Common Variance of the general factor =  0.46 
+## 
+## The degrees of freedom are -3  and the fit is  0 
+## The number of observations was  320  with Chi Square =  0  with prob <  NA
+## The root mean square of the residuals is  0 
+## The df corrected root mean square of the residuals is  NA
+## 
+## Compare this with the adequacy of just a general factor and no group factors
+## The degrees of freedom for just the general factor are 2  and the fit is  0.6 
+## The number of observations was  320  with Chi Square =  189.58  with prob <  6.8e-42
+## The root mean square of the residuals is  0.26 
+## The df corrected root mean square of the residuals is  0.46 
+## 
+## RMSEA index =  0.541  and the 10 % confidence intervals are  0.478 0.609
+## BIC =  178.04 
+## 
+## Measures of factor score adequacy             
+##                                                  g  F1*   F2*   F3*
+## Correlation of scores with factors            0.89 0.91  0.05  0.60
+## Multiple R square of scores with factors      0.79 0.84  0.00  0.35
+## Minimum correlation of factor score estimates 0.59 0.67 -1.00 -0.29
+## 
+##  Total, General and Subset omega for each subset
+##                                                  g  F1* F2*  F3*
+## Omega total for total scores and subscales    0.84 0.84  NA 0.79
+## Omega general for total scores and subscales  0.45 0.02  NA 0.79
+## Omega group for total scores and subscales    0.37 0.82  NA 0.00
+```
+
+```r
+omega(data[,c("case_5_1","case_5_2","case_6_1","case_6_2")], check.keys = TRUE) #RSB omg_t 0.90
+```
+
+```
+## Warning in fa.stats(r = r, f = f, phi = phi, n.obs = n.obs, np.obs = np.obs, :
+## The estimated weights for the factor scores are probably incorrect. Try a
+## different factor score estimation method.
+```
+
+```
+## Warning in fac(r = r, nfactors = nfactors, n.obs = n.obs, rotate = rotate, : An
+## ultra-Heywood case was detected. Examine the results carefully
+```
+
+```
+## Warning in cov2cor(t(w) %*% r %*% w): diag(.) had 0 or NA entries; non-finite
+## result is doubtful
+```
+
+![](_report_files/figure-html/unnamed-chunk-20-3.png)<!-- -->
+
+```
+## Omega 
+## Call: omegah(m = m, nfactors = nfactors, fm = fm, key = key, flip = flip, 
+##     digits = digits, title = title, sl = sl, labels = labels, 
+##     plot = plot, n.obs = n.obs, rotate = rotate, Phi = Phi, option = option, 
+##     covar = covar, check.keys = TRUE)
+## Alpha:                 0.74 
+## G.6:                   0.82 
+## Omega Hierarchical:    0.59 
+## Omega H asymptotic:    0.66 
+## Omega Total            0.9 
+## 
+## Schmid Leiman Factor loadings greater than  0.2 
+##              g   F1*   F2*   F3*   h2   u2   p2
+## case_5_1- 0.29       -0.83       0.76 0.24 0.11
+## case_5_2- 0.22       -0.82       0.74 0.26 0.07
+## case_6_1  0.89                   0.80 0.20 0.99
+## case_6_2  0.90                   0.81 0.19 1.00
+## 
+## With eigenvalues of:
+##    g  F1*  F2*  F3* 
+## 1.73 0.00 1.35 0.03 
+## 
+## general/max  1.28   max/min =   Inf
+## mean percent general =  0.54    with sd =  0.52 and cv of  0.96 
+## Explained Common Variance of the general factor =  0.56 
+## 
+## The degrees of freedom are -3  and the fit is  0 
+## The number of observations was  320  with Chi Square =  0  with prob <  NA
+## The root mean square of the residuals is  0 
+## The df corrected root mean square of the residuals is  NA
+## 
+## Compare this with the adequacy of just a general factor and no group factors
+## The degrees of freedom for just the general factor are 2  and the fit is  0.73 
+## The number of observations was  320  with Chi Square =  229.35  with prob <  1.6e-50
+## The root mean square of the residuals is  0.27 
+## The df corrected root mean square of the residuals is  0.47 
+## 
+## RMSEA index =  0.596  and the 10 % confidence intervals are  0.533 0.663
+## BIC =  217.82 
+## 
+## Measures of factor score adequacy             
+##                                                  g F1*  F2*   F3*
+## Correlation of scores with factors            0.94   0 0.92  0.35
+## Multiple R square of scores with factors      0.89   0 0.84  0.12
+## Minimum correlation of factor score estimates 0.79  -1 0.69 -0.76
+## 
+##  Total, General and Subset omega for each subset
+##                                                  g F1*  F2*  F3*
+## Omega total for total scores and subscales    0.90  NA 0.86 0.89
+## Omega general for total scores and subscales  0.59  NA 0.08 0.89
+## Omega group for total scores and subscales    0.30  NA 0.78 0.00
+```
+
+```r
+omega(data[,c("case_7_1","case_7_2","case_8_1","case_8_2")], check.keys = TRUE) #EMB omg_t 0.89
+```
+
+![](_report_files/figure-html/unnamed-chunk-20-4.png)<!-- -->
+
+```
+## Omega 
+## Call: omegah(m = m, nfactors = nfactors, fm = fm, key = key, flip = flip, 
+##     digits = digits, title = title, sl = sl, labels = labels, 
+##     plot = plot, n.obs = n.obs, rotate = rotate, Phi = Phi, option = option, 
+##     covar = covar, check.keys = TRUE)
+## Alpha:                 0.68 
+## G.6:                   0.77 
+## Omega Hierarchical:    0.51 
+## Omega H asymptotic:    0.58 
+## Omega Total            0.89 
+## 
+## Schmid Leiman Factor loadings greater than  0.2 
+##              g   F1*  F2*  F3*   h2   u2   p2
+## case_7_1  0.83                 0.72 0.28 0.96
+## case_7_2  0.82                 0.70 0.30 0.96
+## case_8_1- 0.22 -0.87           0.82 0.18 0.06
+## case_8_2-      -0.87           0.82 0.18 0.04
+## 
+## With eigenvalues of:
+##    g  F1*  F2*  F3* 
+## 1.45 1.50 0.01 0.10 
+## 
+## general/max  0.96   max/min =   248.29
+## mean percent general =  0.5    with sd =  0.53 and cv of  1.04 
+## Explained Common Variance of the general factor =  0.47 
+## 
+## The degrees of freedom are -3  and the fit is  0 
+## The number of observations was  320  with Chi Square =  0  with prob <  NA
+## The root mean square of the residuals is  0 
+## The df corrected root mean square of the residuals is  NA
+## 
+## Compare this with the adequacy of just a general factor and no group factors
+## The degrees of freedom for just the general factor are 2  and the fit is  0.88 
+## The number of observations was  320  with Chi Square =  277.59  with prob <  5.3e-61
+## The root mean square of the residuals is  0.3 
+## The df corrected root mean square of the residuals is  0.51 
+## 
+## RMSEA index =  0.656  and the 10 % confidence intervals are  0.593 0.724
+## BIC =  266.05 
+## 
+## Measures of factor score adequacy             
+##                                                  g  F1*   F2*   F3*
+## Correlation of scores with factors            0.91 0.94  0.06  0.56
+## Multiple R square of scores with factors      0.82 0.89  0.00  0.32
+## Minimum correlation of factor score estimates 0.65 0.77 -0.99 -0.36
+## 
+##  Total, General and Subset omega for each subset
+##                                                  g  F1* F2*  F3*
+## Omega total for total scores and subscales    0.89 0.90  NA 0.82
+## Omega general for total scores and subscales  0.51 0.04  NA 0.82
+## Omega group for total scores and subscales    0.37 0.85  NA 0.00
+```
+
 
 ## Проверка гипотезы №1
 
@@ -962,7 +1285,7 @@ p4 <- p0 + geom_text(data=as.data.frame(mds_rat_ctrl), aes(x=mds_rat_ctrl[,1], y
 g <- grid.arrange(p2, p1, p4, p3, ncol = 2, nrow = 2)
 ```
 
-![](_report_files/figure-html/unnamed-chunk-18-1.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-21-1.png)<!-- -->
 
 ```r
 #g<-arrangeGrob(p2, p1, p4, p3, ncol = 2, nrow = 2)
@@ -974,6 +1297,142 @@ ggsave('H1.pdf', g)
 
 
 На графиках можно заметить, что рассматриваемые виды эко-поведения достаточно далеки друг от друга, как в контрольной так и в экспериментальной группах, т.е. неоднородны. Эта неоднородность достаточно устойчива, воздействие стимулов не приводит к радикальным изменениям. Визуально относительно близкими можно было бы признать ресурсосбережение (RSB) и эко-мобильность (EMB) в контрольных группах, но корреляция между ними не высока ~ 0.33.
+
+
+
+
+## SEM
+
+
+```r
+sem1 <- '
+  #measurement model
+  RB ~~ ESB
+  RB ~~ RSB
+  RB ~~ EMB
+  ESB ~~ RSB
+  ESB ~~ EMB
+  RSB ~~ EMB
+
+  #residual correlations
+'
+fit_sem1 <- sem(sem1, data = data)#, group = "group")
+```
+
+
+
+```r
+summary(fit_sem1, standardized=TRUE, rsquare=TRUE, fit.measure=TRUE)
+```
+
+```
+## lavaan 0.6-7 ended normally after 27 iterations
+## 
+##   Estimator                                         ML
+##   Optimization method                           NLMINB
+##   Number of free parameters                         10
+##                                                       
+##   Number of observations                           320
+##                                                       
+## Model Test User Model:
+##                                                       
+##   Test statistic                                 0.000
+##   Degrees of freedom                                 0
+## 
+## Model Test Baseline Model:
+## 
+##   Test statistic                                13.083
+##   Degrees of freedom                                 6
+##   P-value                                        0.042
+## 
+## User Model versus Baseline Model:
+## 
+##   Comparative Fit Index (CFI)                    1.000
+##   Tucker-Lewis Index (TLI)                       1.000
+## 
+## Loglikelihood and Information Criteria:
+## 
+##   Loglikelihood user model (H0)                168.533
+##   Loglikelihood unrestricted model (H1)        168.533
+##                                                       
+##   Akaike (AIC)                                -317.065
+##   Bayesian (BIC)                              -279.382
+##   Sample-size adjusted Bayesian (BIC)         -311.100
+## 
+## Root Mean Square Error of Approximation:
+## 
+##   RMSEA                                          0.000
+##   90 Percent confidence interval - lower         0.000
+##   90 Percent confidence interval - upper         0.000
+##   P-value RMSEA <= 0.05                             NA
+## 
+## Standardized Root Mean Square Residual:
+## 
+##   SRMR                                           0.000
+```
+
+```
+## Warning in parameterEstimates(object, ci = ci, standardized = standardized, :
+## lavaan WARNING: rsquare = TRUE, but there are no dependent variables
+```
+
+```
+## 
+## Parameter Estimates:
+## 
+##   Standard errors                             Standard
+##   Information                                 Expected
+##   Information saturated (h1) model          Structured
+## 
+## Covariances:
+##                    Estimate  Std.Err  z-value  P(>|z|)   Std.lv  Std.all
+##   RB ~~                                                                 
+##     ESB               0.002    0.003    0.801    0.423    0.002    0.045
+##     RSB              -0.001    0.003   -0.228    0.820   -0.001   -0.013
+##     EMB               0.002    0.003    0.761    0.446    0.002    0.043
+##   ESB ~~                                                                
+##     RSB               0.002    0.002    0.937    0.349    0.002    0.052
+##     EMB               0.006    0.003    2.497    0.013    0.006    0.141
+##   RSB ~~                                                                
+##     EMB               0.005    0.002    2.223    0.026    0.005    0.125
+## 
+## Variances:
+##                    Estimate  Std.Err  z-value  P(>|z|)   Std.lv  Std.all
+##     RB                0.058    0.005   12.649    0.000    0.058    1.000
+##     ESB               0.041    0.003   12.649    0.000    0.041    1.000
+##     RSB               0.037    0.003   12.649    0.000    0.037    1.000
+##     EMB               0.048    0.004   12.649    0.000    0.048    1.000
+```
+
+```r
+fitMeasures(fit_sem1, c("cfi","rmsea","srmr"))
+```
+
+```
+##   cfi rmsea  srmr 
+##     1     0     0
+```
+
+
+
+```r
+#Specify which of the 3 you want (“regress”, “latent”, “covs”).
+lavaanPlot(model = fit_sem1, node_options = list(shape = "box", fontname = 
+"Helvetica"), edge_options = list(color = "grey"), digits = 2, coefs = TRUE, covs = TRUE, stand = TRUE, stars = c("covs"))
+```
+
+<!--html_preserve--><div id="htmlwidget-07a7e305426d14f80977" style="width:672px;height:480px;" class="grViz html-widget"></div>
+<script type="application/json" data-for="htmlwidget-07a7e305426d14f80977">{"x":{"diagram":" digraph plot { \n graph [ overlap = true, fontsize = 10 ] \n node [ shape = box, fontname = Helvetica ] \n node [shape = box] \n  \n node [shape = oval] \n  \n \n edge [ color = grey ] \n   ESB -> RB [label = \"0.04\", dir = \"both\"] RSB -> RB [label = \"-0.01\", dir = \"both\"] EMB -> RB [label = \"0.04\", dir = \"both\"] RSB -> ESB [label = \"0.05\", dir = \"both\"] EMB -> ESB [label = \"0.14*\", dir = \"both\"] EMB -> RSB [label = \"0.13*\", dir = \"both\"]\n}","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script><!--/html_preserve-->
+
+```r
+dopdf('sem_1.pdf')
+```
+
+```
+## png 
+##   2
+```
+
 
 
 ## Проверка гипотезы №2
@@ -1050,7 +1509,7 @@ d<-na.omit(emo_data[emo_data$emo==1,cols])
 dplot(d,"EMB","EMBo","Emotional")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-20-1.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-26-1.png)<!-- -->
 
 ```r
 dopdf('H2.pdf')
@@ -1155,7 +1614,7 @@ getmeans <- function (c) {
 getmeans("RB")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-21-1.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
 
 Table: Table: RB u-тест Манна-Уитни $H_{0}: \mu_{C} < \mu_{T}$
 
@@ -1179,7 +1638,7 @@ dopdf('H3_1.pdf')
 getmeans("ESB")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-21-2.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-27-2.png)<!-- -->
 
 Table: Table: ESB u-тест Манна-Уитни $H_{0}: \mu_{C} < \mu_{T}$
 
@@ -1203,7 +1662,7 @@ dopdf('H3_2.pdf')
 getmeans("RSB")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-21-3.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-27-3.png)<!-- -->
 
 Table: Table: RSB u-тест Манна-Уитни $H_{0}: \mu_{C} < \mu_{T}$
 
@@ -1227,7 +1686,7 @@ dopdf('H3_3.pdf')
 getmeans("EMB")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-21-4.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-27-4.png)<!-- -->
 
 Table: Table: EMB u-тест Манна-Уитни $H_{0}: \mu_{C} < \mu_{T}$
 
@@ -1591,7 +2050,7 @@ fit.coeff(RB_emo_m0, boot = T)
 fit.plots(RB_emo_m0, "~ emo")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-26-1.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-2.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-3.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-4.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-5.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-32-1.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-2.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-3.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-4.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-5.png)<!-- -->
 
 ```r
 fit.coeff(RB_rat_m0, boot = T)
@@ -1646,7 +2105,7 @@ fit.coeff(RB_rat_m0, boot = T)
 fit.plots(RB_rat_m0, "~ rat")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-26-6.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-7.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-8.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-9.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-10.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-32-6.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-7.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-8.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-9.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-10.png)<!-- -->
 
 ```r
 fit.coeff(RB_emo_m1, boot = T)
@@ -1701,7 +2160,7 @@ fit.coeff(RB_emo_m1, boot = T)
 fit.plots(RB_emo_m1, "~ emo")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-26-11.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-12.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-13.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-14.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-15.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-32-11.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-12.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-13.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-14.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-15.png)<!-- -->
 
 ```r
 fit.coeff(RB_rat_m1, boot = T)
@@ -1756,7 +2215,7 @@ fit.coeff(RB_rat_m1, boot = T)
 fit.plots(RB_rat_m1, "~ rat")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-26-16.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-17.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-18.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-19.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-20.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-32-16.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-17.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-18.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-19.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-20.png)<!-- -->
 
 ```r
 fit.coeff(RB_emo_m2, boot = T)
@@ -1775,14 +2234,14 @@ fit.coeff(RB_emo_m2, boot = T)
 fit.plots(RB_emo_m2, "~ emo")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-26-21.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-22.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-23.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-32-21.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-22.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-23.png)<!-- -->
 
 ```
 ## hat values (leverages) are all = 0.009615385
 ##  and there are no factor predictors; no plot no. 5
 ```
 
-![](_report_files/figure-html/unnamed-chunk-26-24.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-32-24.png)<!-- -->
 
 ```r
 fit.coeff(RB_rat_m2, boot = T)
@@ -1801,14 +2260,14 @@ fit.coeff(RB_rat_m2, boot = T)
 fit.plots(RB_rat_m2, "~ rat")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-26-25.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-26.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-27.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-32-25.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-26.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-27.png)<!-- -->
 
 ```
 ## hat values (leverages) are all = 0.01098901
 ##  and there are no factor predictors; no plot no. 5
 ```
 
-![](_report_files/figure-html/unnamed-chunk-26-28.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-26-29.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-32-28.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-32-29.png)<!-- -->
 
 
 
@@ -1866,7 +2325,7 @@ fit.coeff(ESB_emo_m0, boot = T)
 fit.plots(ESB_emo_m0, "~ emo")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-27-1.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-2.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-3.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-4.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-5.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-33-1.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-2.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-3.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-4.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-5.png)<!-- -->
 
 ```r
 fit.coeff(ESB_rat_m0, boot = T)
@@ -1921,7 +2380,7 @@ fit.coeff(ESB_rat_m0, boot = T)
 fit.plots(ESB_rat_m0, "~ rat")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-27-6.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-7.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-8.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-9.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-10.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-33-6.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-7.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-8.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-9.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-10.png)<!-- -->
 
 ```r
 fit.coeff(ESB_emo_m1, boot = T)
@@ -1976,7 +2435,7 @@ fit.coeff(ESB_emo_m1, boot = T)
 fit.plots(ESB_emo_m1, "~ emo")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-27-11.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-12.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-13.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-14.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-15.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-33-11.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-12.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-13.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-14.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-15.png)<!-- -->
 
 ```r
 fit.coeff(ESB_rat_m1, boot = T)
@@ -2031,7 +2490,7 @@ fit.coeff(ESB_rat_m1, boot = T)
 fit.plots(ESB_rat_m1, "~ rat")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-27-16.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-17.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-18.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-19.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-20.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-33-16.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-17.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-18.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-19.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-20.png)<!-- -->
 
 ```r
 fit.coeff(ESB_emo_m2, boot = T)
@@ -2050,14 +2509,14 @@ fit.coeff(ESB_emo_m2, boot = T)
 fit.plots(ESB_emo_m2, "~ emo")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-27-21.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-22.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-23.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-33-21.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-22.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-23.png)<!-- -->
 
 ```
 ## hat values (leverages) are all = 0.009615385
 ##  and there are no factor predictors; no plot no. 5
 ```
 
-![](_report_files/figure-html/unnamed-chunk-27-24.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-33-24.png)<!-- -->
 
 ```r
 fit.coeff(ESB_rat_m2, boot = T)
@@ -2076,14 +2535,14 @@ fit.coeff(ESB_rat_m2, boot = T)
 fit.plots(ESB_rat_m2, "~ rat")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-27-25.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-26.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-27.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-33-25.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-26.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-27.png)<!-- -->
 
 ```
 ## hat values (leverages) are all = 0.01098901
 ##  and there are no factor predictors; no plot no. 5
 ```
 
-![](_report_files/figure-html/unnamed-chunk-27-28.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-27-29.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-33-28.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-33-29.png)<!-- -->
 
 
 ```r
@@ -2140,7 +2599,7 @@ fit.coeff(RSB_emo_m0, boot = T)
 fit.plots(RSB_emo_m0, "~ emo")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-28-1.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-2.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-3.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-4.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-5.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-34-1.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-2.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-3.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-4.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-5.png)<!-- -->
 
 ```r
 fit.coeff(RSB_rat_m0, boot = T)
@@ -2195,7 +2654,7 @@ fit.coeff(RSB_rat_m0, boot = T)
 fit.plots(RSB_rat_m0, "~ rat")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-28-6.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-7.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-8.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-9.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-10.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-34-6.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-7.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-8.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-9.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-10.png)<!-- -->
 
 ```r
 fit.coeff(RSB_emo_m1, boot = T)
@@ -2250,7 +2709,7 @@ fit.coeff(RSB_emo_m1, boot = T)
 fit.plots(RSB_emo_m1, "~ emo")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-28-11.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-12.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-13.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-14.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-15.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-34-11.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-12.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-13.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-14.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-15.png)<!-- -->
 
 ```r
 fit.coeff(RSB_rat_m1, boot = T)
@@ -2305,7 +2764,7 @@ fit.coeff(RSB_rat_m1, boot = T)
 fit.plots(RSB_rat_m1, "~ rat")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-28-16.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-17.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-18.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-19.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-20.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-34-16.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-17.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-18.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-19.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-20.png)<!-- -->
 
 ```r
 fit.coeff(RSB_emo_m2, boot = T)
@@ -2324,14 +2783,14 @@ fit.coeff(RSB_emo_m2, boot = T)
 fit.plots(RSB_emo_m2, "~ emo")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-28-21.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-22.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-23.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-34-21.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-22.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-23.png)<!-- -->
 
 ```
 ## hat values (leverages) are all = 0.009615385
 ##  and there are no factor predictors; no plot no. 5
 ```
 
-![](_report_files/figure-html/unnamed-chunk-28-24.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-34-24.png)<!-- -->
 
 ```r
 fit.coeff(RSB_rat_m2, boot = T)
@@ -2350,14 +2809,14 @@ fit.coeff(RSB_rat_m2, boot = T)
 fit.plots(RSB_rat_m2, "~ rat")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-28-25.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-26.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-27.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-34-25.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-26.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-27.png)<!-- -->
 
 ```
 ## hat values (leverages) are all = 0.01098901
 ##  and there are no factor predictors; no plot no. 5
 ```
 
-![](_report_files/figure-html/unnamed-chunk-28-28.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-28-29.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-34-28.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-34-29.png)<!-- -->
 
 
 ```r
@@ -2414,7 +2873,7 @@ fit.coeff(EMB_emo_m0, boot = T)
 fit.plots(EMB_emo_m0, "~ emo")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-29-1.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-2.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-3.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-4.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-5.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-35-1.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-2.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-3.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-4.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-5.png)<!-- -->
 
 ```r
 fit.coeff(EMB_rat_m0, boot = T)
@@ -2469,7 +2928,7 @@ fit.coeff(EMB_rat_m0, boot = T)
 fit.plots(EMB_rat_m0, "~ rat")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-29-6.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-7.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-8.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-9.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-10.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-35-6.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-7.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-8.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-9.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-10.png)<!-- -->
 
 ```r
 fit.coeff(EMB_emo_m1, boot = T)
@@ -2524,7 +2983,7 @@ fit.coeff(EMB_emo_m1, boot = T)
 fit.plots(EMB_emo_m1, "~ emo")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-29-11.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-12.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-13.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-14.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-15.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-35-11.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-12.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-13.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-14.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-15.png)<!-- -->
 
 ```r
 fit.coeff(EMB_rat_m1, boot = T)
@@ -2579,7 +3038,7 @@ fit.coeff(EMB_rat_m1, boot = T)
 fit.plots(EMB_rat_m1, "~ rat")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-29-16.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-17.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-18.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-19.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-20.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-35-16.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-17.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-18.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-19.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-20.png)<!-- -->
 
 ```r
 fit.coeff(EMB_emo_m2, boot = T)
@@ -2598,14 +3057,14 @@ fit.coeff(EMB_emo_m2, boot = T)
 fit.plots(EMB_emo_m2, "~ emo")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-29-21.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-22.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-23.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-35-21.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-22.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-23.png)<!-- -->
 
 ```
 ## hat values (leverages) are all = 0.009615385
 ##  and there are no factor predictors; no plot no. 5
 ```
 
-![](_report_files/figure-html/unnamed-chunk-29-24.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-35-24.png)<!-- -->
 
 ```r
 fit.coeff(EMB_rat_m2, boot = T)
@@ -2624,14 +3083,14 @@ fit.coeff(EMB_rat_m2, boot = T)
 fit.plots(EMB_rat_m2, "~ rat")
 ```
 
-![](_report_files/figure-html/unnamed-chunk-29-25.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-26.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-27.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-35-25.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-26.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-27.png)<!-- -->
 
 ```
 ## hat values (leverages) are all = 0.01098901
 ##  and there are no factor predictors; no plot no. 5
 ```
 
-![](_report_files/figure-html/unnamed-chunk-29-28.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-29-29.png)<!-- -->
+![](_report_files/figure-html/unnamed-chunk-35-28.png)<!-- -->![](_report_files/figure-html/unnamed-chunk-35-29.png)<!-- -->
 
 ## Приложение
 

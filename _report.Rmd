@@ -31,7 +31,7 @@ output:
 
 *Гипотеза H3а.* Склонность к более затратным видам поведения менее подвержена ситуативному влиянию стимулов (low-cost hypothesis).
 
-## Подготовка данных
+## Preparing
 
 Ниже представленны параметры окружения R. Производится загрузка данных, логарифмирование некоторых признаков (возраст, размер города, время ответа). Вычисляются аддитивные индексы, затем производится их унификация в диапазоне [0...1] для удобства графического отображения и интерпретации.
 
@@ -357,6 +357,49 @@ lapply(t, function(v) {
 ```
 # Результаты
 
+# SEM & Validity & Power
+
+```{r, warning=FALSE, message=FALSE, cache=FALSE}
+library(lavaan)
+library(semPlot)
+library(semPower)
+library(lavaanPlot)
+library(psych)
+library(pwr)
+library(MBESS)
+library(GPArotation)
+library(DiagrammeRsvg)
+library(rsvg)
+
+```
+
+```{r cache=TRUE, include=TRUE}
+#power analysis
+pwr.anova.test(k = 2, n = , sig.level = 0.05, power = 0.9, f = 0.25)
+pwr.anova.test(k = 3, n = , sig.level = 0.05, power = 0.9, f = 0.25)
+#f - 0.25 is medium size effect
+#k - number of groups
+```
+
+
+```{r cache=TRUE, include=TRUE}
+#Cronbach's alpha and McDonald's omega
+#0.7 - 0.79 - acceptable
+#0.8 - 0.89 - good
+#0.6 - 0.69 - questionable
+
+#alpha(data[,c("case_1_1","case_1_2","case_2_1","case_2_2")], check.keys = TRUE)
+#alpha(data[,c("case_3_1","case_3_2","case_4_1","case_4_2")], check.keys = TRUE)
+#alpha(data[,c("case_5_1","case_5_2","case_6_1","case_6_2")], check.keys = TRUE)
+#alpha(data[,c("case_7_1","case_7_2","case_8_1","case_8_2")], check.keys = TRUE)
+
+omega(data[,c("case_1_1","case_1_2","case_2_1","case_2_2")], check.keys = TRUE) #RB omg_t 0.85
+omega(data[,c("case_3_1","case_3_2","case_4_1","case_4_2")], check.keys = TRUE) #ESB omg_t 0.84
+omega(data[,c("case_5_1","case_5_2","case_6_1","case_6_2")], check.keys = TRUE) #RSB omg_t 0.90
+omega(data[,c("case_7_1","case_7_2","case_8_1","case_8_2")], check.keys = TRUE) #EMB omg_t 0.89
+
+```
+
 
 ## Проверка гипотезы №1
 
@@ -452,6 +495,44 @@ cbind(cor_emo_ctrl, cor_rat_ctrl)
 
 
 На графиках можно заметить, что рассматриваемые виды эко-поведения достаточно далеки друг от друга, как в контрольной так и в экспериментальной группах, т.е. неоднородны. Эта неоднородность достаточно устойчива, воздействие стимулов не приводит к радикальным изменениям. Визуально относительно близкими можно было бы признать ресурсосбережение (RSB) и эко-мобильность (EMB) в контрольных группах, но корреляция между ними не высока ~ `r round(mean(cor_emo_ctrl,cor_rat_ctrl), 2)`.
+
+
+
+
+## SEM
+
+```{r cache=TRUE, include=TRUE}
+
+sem1 <- '
+  #measurement model
+  RB ~~ ESB
+  RB ~~ RSB
+  RB ~~ EMB
+  ESB ~~ RSB
+  ESB ~~ EMB
+  RSB ~~ EMB
+
+  #residual correlations
+'
+fit_sem1 <- sem(sem1, data = data)#, group = "group")
+```
+
+
+```{r cache=TRUE, include=TRUE}
+summary(fit_sem1, standardized=TRUE, rsquare=TRUE, fit.measure=TRUE)
+fitMeasures(fit_sem1, c("cfi","rmsea","srmr"))
+```
+
+
+```{r cache=TRUE, include=TRUE, warning=FALSE, message=FALSE}
+#Specify which of the 3 you want (“regress”, “latent”, “covs”).
+lplot <- lavaanPlot(model = fit_sem1, node_options = list(shape = "box", fontname = 
+"Helvetica"), edge_options = list(color = "grey"), digits = 2, coefs = TRUE, covs = TRUE, stand = TRUE, stars = c("covs"))
+embed_plot_pdf(lplot, 'sem_1.pdf')
+lplot
+
+```
+
 
 
 ## Проверка гипотезы №2
