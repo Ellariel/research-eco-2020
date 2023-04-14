@@ -1,4 +1,1 @@
-### research-eco-2020
-This is additional materials and data supplement for research "Environmental attitudes and contextual stimuli in the emerging environmental culture: an empirical study from Russia" submitted on [SSRN](https://papers.ssrn.com/abstract=3730616).
-
-Please mail to ell.science[at]mail.ru for any questions.
+### This is additional materials and data supplement for paper "Environmental attitudes and contextual stimuli in emerging environmental culture: An empirical study from Russia" submitted on [SSRN](https://papers.ssrn.com/abstract=3730616), published version on [https://doi.org/10.1016/j.spc.2021.05.008](https://doi.org/10.1016/j.spc.2021.05.008).
